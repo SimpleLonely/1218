@@ -34,10 +34,10 @@ scaler.fit(data_train)
 scaler.transform(data_train)
 scaler.transform(data_test)
 
-X_train = data_train[:, 1:]
-y_train = data_train[:, 0]
-X_test = data_test[:, 1:]
-y_test = data_test[:, 0]
+X_train = data_train.ix[:, 1:]
+y_train = data_train.ix[:, 0]
+X_test = data_test.ix[:, 1:]
+y_test = data_test.ix[:, 0]
 
 n_parameters = 3
 n_neurons_1 = 256
