@@ -18,7 +18,7 @@ MODEL_NAME = "1218_model"
 
 sess = tf.Session()
 
-data = pd.read_csv('E:/1218/1218/res/data_meg.csv')
+data = pd.read_csv('E:/1218/res/data_meg.csv')
 n = data.shape[0]
 m = data.shape[1]
 
@@ -26,22 +26,18 @@ train_start = 0
 train_end = int(np.floor(0.8*n))
 test_start = train_end + 1
 test_end = n
-data_train = data.loc[train_start: train_end]
-data_test = data.loc[test_start: test_end]
-print (data_train.shape)
+data_train = data[np.arange(train_start, train_end), :]
+data_test = data[np.arange(test_start, test_end), :]
 
 scaler = MinMaxScaler()
 scaler.fit(data_train)
 scaler.transform(data_train)
 scaler.transform(data_test)
-print (data_train)
 
-
-X_train = data_train.ix[:,1:]
-
-y_train = data_train.ix[:, 0]
-X_test = data_test.ix[:, 1:]
-y_test = data_test.ix[:, 0]
+X_train = data_train[:, 1:]
+y_train = data_train[:, 0]
+X_test = data_test[:, 1:]
+y_test = data_test[:, 0]
 
 n_parameters = 3
 n_neurons_1 = 256
