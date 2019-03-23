@@ -8,7 +8,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 sess = tf.Session()
 
-data = pd.read_csv('E:/1218/res/data_meg.csv')
+data = pd.read_csv('E:/1218/res/inputlg.csv')
 n = data.shape[0]
 m = data.shape[1]
 train_start = 0
@@ -95,3 +95,9 @@ plt.xlabel('Generation')
 plt.ylabel('Loss')
 plt.legend(loc='upper right')
 plt.show()
+
+merged = tf.summary.merge_all()
+if not os.path.exists('tensorboard_logs/'):
+    os.makedirs('tensorboard_logs/')
+
+my_writer = tf.summary.FileWriter('tensorboard_logs/', sess.graph)
