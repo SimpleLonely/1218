@@ -20,57 +20,55 @@ if __name__ == "__main__":
 
     sess = tf.Session()
     # import data
-    data = pd.read_csv('E:\\1218\\1218\\res\\lgmeg.csv')
+    data = pd.read_csv('E:/1218/res/lgmeg.csv')
     n = data.shape[0]
     m = data.shape[1]
-    train_start = 0
+    train_start = 1
     train_end = int(np.floor(0.8 * n))
     test_start = train_end + 1
     test_end = n
     data_train = data.loc[train_start: train_end]
     data_test = data.loc[test_start: test_end]
 
-    x_train = data_train.ix[:, 4:]
+    x_train = data_train.ix[:, 1:]
     y_train = data_train.ix[:, 0]
-    x_test = data_test.ix[:, 4:]
+    x_test = data_test.ix[:, 1:]
     y_test = data_test.ix[:, 0]
     x_test = np.nan_to_num(normalize_cols(x_test))
     x_train = np.nan_to_num(normalize_cols(x_train))
 
-    print(x_test)
-
     n_parameters = 3
     n_neurons_1 = 64
-    n_neurons_2 = 16
-    n_neurons_3 = 4
+    n_neurons_2 = 32
+    n_neurons_3 = 8
     n_target = 1
 
     X = tf.placeholder(dtype=tf.float32, shape=[None, n_parameters], name='x-input')
     Y = tf.placeholder(dtype=tf.float32, shape=[None, 1], name='y-input')
 
-    W_hidden_1 = tf.Variable(tf.truncated_normal([n_parameters, n_neurons_1],stddev=1,mean=0))
-    bias_hidden_1 = tf.Variable(tf.truncated_normal([n_neurons_1],mean=0))
+    W_hidden_1 = tf.Variable(tf.truncated_normal([n_parameters, n_neurons_1], stddev=1, mean=0))
+    bias_hidden_1 = tf.Variable(tf.truncated_normal([n_neurons_1], mean=0))
     hidden_1 = tf.nn.relu(tf.add(tf.matmul(X, W_hidden_1), bias_hidden_1))
 
-    W_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_1, n_neurons_2],stddev=1,mean=0))
-    bias_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_2],mean=0))
+    W_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_1, n_neurons_2], stddev=1, mean=0))
+    bias_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_2], mean=0))
     hidden_2 = tf.nn.relu(tf.add(tf.matmul(hidden_1, W_hidden_2), bias_hidden_2))
 
-    W_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_2, n_neurons_3],stddev=1,mean=0))
-    bias_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_3],mean=0))
+    W_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_2, n_neurons_3], stddev=1, mean=0))
+    bias_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_3], mean=0))
     hidden_3 = tf.nn.relu(tf.add(tf.matmul(hidden_2, W_hidden_3), bias_hidden_3))
 
-    W_out = tf.Variable(tf.truncated_normal([n_neurons_3, n_target],stddev=1,mean=0))
-    bias_out = tf.Variable(tf.truncated_normal([n_target],mean=0))
+    W_out = tf.Variable(tf.truncated_normal([n_neurons_3, n_target], stddev=1, mean=0))
+    bias_out = tf.Variable(tf.truncated_normal([n_target], mean=0))
     out = tf.transpose(tf.add(tf.matmul(hidden_3, W_out), bias_out))
 
-    global_step = tf.Variable(0,trainable=False)
+    global_step = tf.Variable(0, trainable=False)
 
     loss = tf.reduce_mean(tf.square(out-Y))
 
-    learning_rate = tf.train.exponential_decay(LEARNING_RATE_BASE,global_step,LEARNING_RATE_STEP,LEARNING_RATE_DECAY,staircase=True)
+    learning_rate = tf.train.exponential_decay(LEARNING_RATE_BASE, global_step, LEARNING_RATE_STEP, LEARNING_RATE_DECAY, staircase=True)
     my_opt = tf.train.GradientDescentOptimizer(learning_rate)
-    train_step = my_opt.minimize(loss,global_step=global_step)
+    train_step = my_opt.minimize(loss, global_step=global_step)
 
     init = tf.global_variables_initializer()
     sess.run(init)
@@ -94,8 +92,8 @@ if __name__ == "__main__":
         test_temp_loss = sess.run(loss, feed_dict={X: x_test, Y: np.transpose([y_test])})
         test_loss.append(np.sqrt(test_temp_loss))
 
-        if(i+1)%1 == 0:
-            print("%s steps:rate is %s" % (global_step_val,learning_rate_val))
+        if(i + 1) % 1 == 0:
+            print("%s steps:rate is %s" % (global_step_val, learning_rate_val))
             print('Generation' + str(i+1) + '.Loss = ' + str(temp_loss))
 
     plt.plot(loss_vec, 'k-', label='Train Loss')
