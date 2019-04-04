@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     sess = tf.Session()
     # import data
-    data = pd.read_csv('E:\\1218\\1218\\res\\lgmeg.csv')
+    data = pd.read_csv('E:\\1218\\1218\\res\\input.csv')
     n = data.shape[0]
     m = data.shape[1]
     train_start = 0
@@ -30,16 +30,16 @@ if __name__ == "__main__":
     data_train = data.loc[train_start: train_end]
     data_test = data.loc[test_start: test_end]
 
-    x_train = data_train.ix[:, 4:]
+    x_train = data_train.ix[:, 2:]
     y_train = data_train.ix[:, 0]
-    x_test = data_test.ix[:, 4:]
+    x_test = data_test.ix[:, 2:]
     y_test = data_test.ix[:, 0]
     x_test = np.nan_to_num(normalize_cols(x_test))
     x_train = np.nan_to_num(normalize_cols(x_train))
 
     print(x_test)
 
-    n_parameters = 3
+    n_parameters = 5
     n_neurons_1 = 64
     n_neurons_2 = 16
     n_neurons_3 = 4
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     global_step = tf.Variable(0,trainable=False)
 
-    loss = tf.reduce_mean(tf.square(out-Y))
+    loss = tf.reduce_mean(np.square(out-Y))
 
     learning_rate = tf.train.exponential_decay(LEARNING_RATE_BASE,global_step,LEARNING_RATE_STEP,LEARNING_RATE_DECAY,staircase=True)
     my_opt = tf.train.GradientDescentOptimizer(learning_rate)
@@ -74,9 +74,10 @@ if __name__ == "__main__":
 
     init = tf.global_variables_initializer()
     sess.run(init)
-
+    # saver = tf.train.Saver(...variables...)
     loss_vec = []
     test_loss = []
+    pre_y = []
     batch_size = 20
 
     for i in range(500):
@@ -88,18 +89,25 @@ if __name__ == "__main__":
         learning_rate_val = sess.run(learning_rate)
         global_step_val = sess.run(global_step)
 
+        preY = sess.run(out,feed_dict={X: rand_x, Y: rand_y})
+        pre_y.append(preY[0])
+
         temp_loss = sess.run(loss, feed_dict={X: rand_x, Y: rand_y})
         loss_vec.append(np.sqrt(temp_loss))
 
         test_temp_loss = sess.run(loss, feed_dict={X: x_test, Y: np.transpose([y_test])})
         test_loss.append(np.sqrt(test_temp_loss))
 
-        if(i+1)%1 == 0:
+        if(i+1)%5 == 0:
             print("%s steps:rate is %s" % (global_step_val,learning_rate_val))
             print('Generation' + str(i+1) + '.Loss = ' + str(temp_loss))
+            # print('prediction'+str(preY[0]))
 
+
+    print (pre_y)
     plt.plot(loss_vec, 'k-', label='Train Loss')
     plt.plot(test_loss, 'r--', label='Test Loss')
+    # plt.plot(pre_y,'b-',label = "Prediction")
     plt.title('Loss per Generation')
     plt.xlabel('Generation')
     plt.ylabel('Loss')
