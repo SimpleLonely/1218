@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import time
 
 LEARNING_RATE_BASE = 0.1
 LEARNING_RATE_DECAY = 0.5
@@ -14,13 +15,12 @@ def normalize_cols(m):
     col_min = m.min(axis=0)
     return (m-col_min)/(col_max-col_min)
 
-
+start = time.clock()
 if __name__ == "__main__":
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
     sess = tf.Session()
     # import data
-    data = pd.read_csv('E:\\1218\\1218\\res\\lgmeg.csv')
+    data = pd.read_csv('input.csv')
     n = data.shape[0]
     m = data.shape[1]
     train_start = 0
@@ -30,16 +30,16 @@ if __name__ == "__main__":
     data_train = data.loc[train_start: train_end]
     data_test = data.loc[test_start: test_end]
 
-    x_train = data_train.ix[:, 4:]
+    x_train = data_train.ix[:, 2:]
     y_train = data_train.ix[:, 0]
-    x_test = data_test.ix[:, 4:]
+    x_test = data_test.ix[:, 2:]
     y_test = data_test.ix[:, 0]
     x_test = np.nan_to_num(normalize_cols(x_test))
     x_train = np.nan_to_num(normalize_cols(x_train))
 
     print(x_test)
 
-    n_parameters = 3
+    n_parameters = 5
     n_neurons_1 = 64
     n_neurons_2 = 16
     n_neurons_3 = 4
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     test_loss = []
     batch_size = 20
 
-    for i in range(500):
+    for i in range(5000):
         rand_index = np.random.choice(len(x_train), size=batch_size)
         rand_x = x_train[rand_index]
         rand_y = np.transpose([y_train[rand_index]])
@@ -105,3 +105,6 @@ if __name__ == "__main__":
     plt.ylabel('Loss')
     plt.legend(loc='upper right')
     plt.show()
+    end = time.clock()
+    print(end-start)
+    sess = tf.Session(config=tf.ConfigProto(log_device_placement=True))
