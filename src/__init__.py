@@ -50,15 +50,15 @@ if __name__ == "__main__":
 
     W_hidden_1 = tf.Variable(tf.truncated_normal([n_parameters, n_neurons_1],stddev=1,mean=0))
     bias_hidden_1 = tf.Variable(tf.truncated_normal([n_neurons_1],mean=0))
-    hidden_1 = tf.nn.relu(tf.add(tf.matmul(X, W_hidden_1), bias_hidden_1))
+    hidden_1 = tf.nn.softsign(tf.add(tf.matmul(X, W_hidden_1), bias_hidden_1))
 
     W_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_1, n_neurons_2],stddev=1,mean=0))
     bias_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_2],mean=0))
-    hidden_2 = tf.nn.relu(tf.add(tf.matmul(hidden_1, W_hidden_2), bias_hidden_2))
+    hidden_2 = tf.nn.softsign(tf.add(tf.matmul(hidden_1, W_hidden_2), bias_hidden_2))
 
     W_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_2, n_neurons_3],stddev=1,mean=0))
     bias_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_3],mean=0))
-    hidden_3 = tf.nn.relu(tf.add(tf.matmul(hidden_2, W_hidden_3), bias_hidden_3))
+    hidden_3 = tf.nn.softsign(tf.add(tf.matmul(hidden_2, W_hidden_3), bias_hidden_3))
 
     W_out = tf.Variable(tf.truncated_normal([n_neurons_3, n_target],stddev=1,mean=0))
     bias_out = tf.Variable(tf.truncated_normal([n_target],mean=0))
@@ -77,10 +77,11 @@ if __name__ == "__main__":
     # saver = tf.train.Saver(...variables...)
     loss_vec = []
     test_loss = []
-    pre_y = []
+    pre_y_vec = []
+    exactY_vec = []
     batch_size = 20
 
-    for i in range(500):
+    for i in range(100):
         rand_index = np.random.choice(len(x_train), size=batch_size)
         rand_x = x_train[rand_index]
         rand_y = np.transpose([y_train[rand_index]])
@@ -89,8 +90,13 @@ if __name__ == "__main__":
         learning_rate_val = sess.run(learning_rate)
         global_step_val = sess.run(global_step)
 
+        exactY = sess.run(Y,feed_dict={X: rand_x, Y: rand_y})
         preY = sess.run(out,feed_dict={X: rand_x, Y: rand_y})
-        pre_y.append(preY[0])
+        hidden_1_show = sess.run(hidden_1,feed_dict={X: rand_x, Y: rand_y})
+        hidden_2_show = sess.run(hidden_2,feed_dict={X: rand_x, Y: rand_y})
+        hidden_3_show = sess.run(hidden_3,feed_dict={X: rand_x, Y: rand_y})
+        pre_y_vec.append(preY)
+        exactY_vec.append(tf.transpose(exactY))
 
         temp_loss = sess.run(loss, feed_dict={X: rand_x, Y: rand_y})
         loss_vec.append(np.sqrt(temp_loss))
@@ -99,15 +105,20 @@ if __name__ == "__main__":
         test_loss.append(np.sqrt(test_temp_loss))
 
         if(i+1)%5 == 0:
+            print("***********************")
             print("%s steps:rate is %s" % (global_step_val,learning_rate_val))
             print('Generation' + str(i+1) + '.Loss = ' + str(temp_loss))
-            # print('prediction'+str(preY[0]))
+            print('prediction '+str(preY))
+            print('Hidden 1: '+str(hidden_1_show))
+            print('Hidden 2: '+str(hidden_2_show))
+            print('Hidden 3: '+str(hidden_3_show))
 
 
-    print (pre_y)
+    # print (pre_y_vec)
     plt.plot(loss_vec, 'k-', label='Train Loss')
     plt.plot(test_loss, 'r--', label='Test Loss')
-    # plt.plot(pre_y,'b-',label = "Prediction")
+    plt.plot(pre_y_vec,'b-',label = "Prediction")
+    plt.plot(exactY_vec,'b-',label = "Exact")
     plt.title('Loss per Generation')
     plt.xlabel('Generation')
     plt.ylabel('Loss')
