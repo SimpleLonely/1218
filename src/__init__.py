@@ -32,10 +32,13 @@ if __name__ == "__main__":
     data_train = data.loc[train_start: train_end]
     data_test = data.loc[test_start: test_end]
 
+    x_data = data.loc[1:n].ix[:, 2:]
+    y_data = data.loc[1:n].ix[:, 0]
     x_train = data_train.ix[:, 2:]
     y_train = data_train.ix[:, 0]
     x_test = data_test.ix[:, 2:]
     y_test = data_test.ix[:, 0]
+    x_data = np.nan_to_num(normalize_cols(x_data))
     x_test = np.nan_to_num(normalize_cols(x_test))
     x_train = np.nan_to_num(normalize_cols(x_train))
 
@@ -81,24 +84,23 @@ if __name__ == "__main__":
     exactY_vec = []
     batch_size = 20
 
-    for i in range(10):
+    for i in range(200):
         rand_index = np.random.choice(len(x_train), size=batch_size)
         rand_x = x_train[rand_index]
         rand_y = np.transpose([y_train[rand_index]])
-        print ("*********"+str(rand_y))
+
         sess.run(train_step, feed_dict={X: rand_x, Y: rand_y})
 
         learning_rate_val = sess.run(learning_rate)
         global_step_val = sess.run(global_step)
 
-    
         temp_loss = sess.run(loss, feed_dict={X: rand_x, Y: rand_y})
         loss_vec.append(np.sqrt(temp_loss))
 
         test_temp_loss = sess.run(loss, feed_dict={X: x_test, Y: np.transpose([y_test])})
         test_loss.append(np.sqrt(test_temp_loss))
 
-        if(i+1)%5 == 0:
+        if(i+1) % 5 == 0:
             print("***********************")
             print("%s steps:rate is %s" % (global_step_val,learning_rate_val))
             print('Generation' + str(i+1) + '.Loss = ' + str(temp_loss))
@@ -106,38 +108,32 @@ if __name__ == "__main__":
             # print('Hidden 2: '+str(hidden_2_show))
             # print('Hidden 3: '+str(hidden_3_show))
 
+    for i in range(1, n-5):
+        ord_index = np.random.random_integers(i, i+1, 2)
+        ord_x = x_data[ord_index]
+        ord_y = np.transpose([y_data[ord_index]])
 
-    for i in range(0, n):
-        ord_x = x_train[np.array([i])]
-        ord_y = [y_train[np.array([i])]]
-        print("*********ord" + str(ord_y))
         sess.run(train_step, feed_dict={X: ord_x, Y: ord_y})
 
         learning_rate_val = sess.run(learning_rate)
 
-        exactY = sess.run(Y,feed_dict={X: ord_x, Y: ord_y})
-        preY = sess.run(out,feed_dict={X: ord_x, Y: ord_y})
+        exactY = sess.run(Y, feed_dict={X: ord_x, Y: ord_y})
+        preY = sess.run(out, feed_dict={X: ord_x, Y: ord_y})
 
         pre_y_vec.append(preY[0][0])
         exactY_vec.append(exactY[0][0])
 
+        if i % 100 == 0:
+            print(i)
+
     # print (pre_y_vec)
     
-    plt.plot(pre_y_vec,'b-',label = "Prediction")
-    plt.plot(exactY_vec,'g-',label = "Exact")
+    plt.plot(pre_y_vec, 'b-', label="Prediction")
+    plt.plot(exactY_vec, 'g-', label="Exact")
     plt.title('Price')
     plt.xlabel('Generation')
     plt.ylabel('Rate')
     plt.show()
-
-    print("loss_vec %d:", len(loss_vec), file=o_file)
-    for v in loss_vec:
-        print(v, file=o_file)
-    print("test_loss %d:", len(test_loss), file=o_file)
-    for v in test_loss:
-        print(v, file=o_file)
-
-    o_file.close()
 
     plt.plot(loss_vec, 'k-', label='Train Loss')
     plt.plot(test_loss, 'r--', label='Test Loss')
