@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import os
 
 LEARNING_RATE_BASE = 0.1
-LEARNING_RATE_DECAY = 0.5
-LEARNING_RATE_STEP = 50
+LEARNING_RATE_DECAY = 0.8
+LEARNING_RATE_STEP = 100
 
 def normalize_cols(m):
     col_max = m.max(axis=0)
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     exactY_vec = []
     batch_size = 20
 
-    for i in range(100):
+    for i in range(1000):
         rand_index = np.random.choice(len(x_train), size=batch_size)
         rand_x = x_train[rand_index]
         rand_y = np.transpose([y_train[rand_index]])
@@ -95,8 +95,8 @@ if __name__ == "__main__":
         hidden_1_show = sess.run(hidden_1,feed_dict={X: rand_x, Y: rand_y})
         hidden_2_show = sess.run(hidden_2,feed_dict={X: rand_x, Y: rand_y})
         hidden_3_show = sess.run(hidden_3,feed_dict={X: rand_x, Y: rand_y})
-        pre_y_vec.append(preY)
-        exactY_vec.append(tf.transpose(exactY))
+        pre_y_vec.append(preY[0][0])
+        exactY_vec.append(exactY[0][0])
 
         temp_loss = sess.run(loss, feed_dict={X: rand_x, Y: rand_y})
         loss_vec.append(np.sqrt(temp_loss))
@@ -109,16 +109,22 @@ if __name__ == "__main__":
             print("%s steps:rate is %s" % (global_step_val,learning_rate_val))
             print('Generation' + str(i+1) + '.Loss = ' + str(temp_loss))
             print('prediction '+str(preY))
-            print('Hidden 1: '+str(hidden_1_show))
-            print('Hidden 2: '+str(hidden_2_show))
-            print('Hidden 3: '+str(hidden_3_show))
+            # print('Hidden 1: '+str(hidden_1_show))
+            # print('Hidden 2: '+str(hidden_2_show))
+            # print('Hidden 3: '+str(hidden_3_show))
 
 
     # print (pre_y_vec)
+    
+    plt.plot(pre_y_vec,'b-',label = "Prediction")
+    plt.plot(exactY_vec,'g-',label = "Exact")
+    plt.title('Price')
+    plt.xlabel('Generation')
+    plt.ylabel('Rate')
+    plt.show()
+
     plt.plot(loss_vec, 'k-', label='Train Loss')
     plt.plot(test_loss, 'r--', label='Test Loss')
-    plt.plot(pre_y_vec,'b-',label = "Prediction")
-    plt.plot(exactY_vec,'b-',label = "Exact")
     plt.title('Loss per Generation')
     plt.xlabel('Generation')
     plt.ylabel('Loss')
