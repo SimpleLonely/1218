@@ -9,18 +9,21 @@ LEARNING_RATE_BASE = 0.1
 LEARNING_RATE_DECAY = 0.5
 LEARNING_RATE_STEP = 50
 
+
 def normalize_cols(m):
     col_max = m.max(axis=0)
     col_min = m.min(axis=0)
     return (m-col_min)/(col_max-col_min)
 
 
+sess = tf.InteractiveSession()
+
 if __name__ == "__main__":
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-    sess = tf.Session()
     # import data
-    data = pd.read_csv('E:/1218/res/lgmeg.csv')
+    data = pd.read_csv('E:/1218/res/input0420.csv')
+    o_file = open("E:/1218/res/out_put.txt", "w")
     n = data.shape[0]
     m = data.shape[1]
     train_start = 1
@@ -30,17 +33,17 @@ if __name__ == "__main__":
     data_train = data.loc[train_start: train_end]
     data_test = data.loc[test_start: test_end]
 
-    x_train = data_train.ix[:, 1:]
+    x_train = data_train.ix[:, 2:]
     y_train = data_train.ix[:, 0]
-    x_test = data_test.ix[:, 1:]
+    x_test = data_test.ix[:, 2:]
     y_test = data_test.ix[:, 0]
     x_test = np.nan_to_num(normalize_cols(x_test))
     x_train = np.nan_to_num(normalize_cols(x_train))
 
-    n_parameters = 3
+    n_parameters = 5
     n_neurons_1 = 64
-    n_neurons_2 = 32
-    n_neurons_3 = 8
+    n_neurons_2 = 16
+    n_neurons_3 = 4
     n_target = 1
 
     X = tf.placeholder(dtype=tf.float32, shape=[None, n_parameters], name='x-input')
@@ -92,14 +95,34 @@ if __name__ == "__main__":
         test_temp_loss = sess.run(loss, feed_dict={X: x_test, Y: np.transpose([y_test])})
         test_loss.append(np.sqrt(test_temp_loss))
 
-        if(i + 1) % 1 == 0:
+        # print(out.eval())
+        # tf.Print(out, [out])
+        # print("&"),
+        # tf.Print(Y, [Y]),
+        # print("&"),
+        # tf.Print(loss, [loss]),
+        # print("&")
+        # print()
+
+        if(i + 1) % 100 == 0:
             print("%s steps:rate is %s" % (global_step_val, learning_rate_val))
             print('Generation' + str(i+1) + '.Loss = ' + str(temp_loss))
 
+    print("loss_vec %d:", len(loss_vec), file=o_file)
+    for v in loss_vec:
+        print(v, file=o_file)
+    print("test_loss %d:", len(test_loss), file=o_file)
+    for v in test_loss:
+        print(v, file=o_file)
+
+    o_file.close()
+
     plt.plot(loss_vec, 'k-', label='Train Loss')
     plt.plot(test_loss, 'r--', label='Test Loss')
+
     plt.title('Loss per Generation')
     plt.xlabel('Generation')
     plt.ylabel('Loss')
     plt.legend(loc='upper right')
     plt.show()
+
