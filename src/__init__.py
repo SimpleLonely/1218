@@ -6,9 +6,6 @@ import matplotlib.pyplot as plt
 import os
 
 LEARNING_RATE_BASE = 0.1
-LEARNING_RATE_DECAY = 0.8
-LEARNING_RATE_STEP = 100
-
 
 def normalize_cols(m):
     col_max = m.max(axis=0)
@@ -18,11 +15,11 @@ def normalize_cols(m):
 
 sess = tf.InteractiveSession()
 
-if __name__ == "__main__":
+
+def run_one_time(LEARNING_RATE_DECAY,LEARNING_RATE_STEP,n_neurons_1 ,n_neurons_2 ,n_neurons_3,batch_size,round):
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-    # import data
-    data = pd.read_csv('E:/1218/res/input0420.csv')
+    data = pd.read_csv('E:\\1218\\1218\\res\\input0420.csv')
     n = data.shape[0]
     m = data.shape[1]
     train_start = 1
@@ -43,9 +40,7 @@ if __name__ == "__main__":
     x_train = np.nan_to_num(normalize_cols(x_train))
 
     n_parameters = 5
-    n_neurons_1 = 64
-    n_neurons_2 = 16
-    n_neurons_3 = 4
+
     n_target = 1
 
     X = tf.placeholder(dtype=tf.float32, shape=[None, n_parameters], name='x-input')
@@ -82,9 +77,8 @@ if __name__ == "__main__":
     test_loss = []
     pre_y_vec = []
     exactY_vec = []
-    batch_size = 20
 
-    for i in range(200):
+    for i in range(round):
         rand_index = np.random.choice(len(x_train), size=batch_size)
         rand_x = x_train[rand_index]
         rand_y = np.transpose([y_train[rand_index]])
@@ -104,10 +98,8 @@ if __name__ == "__main__":
             print("***********************")
             print("%s steps:rate is %s" % (global_step_val,learning_rate_val))
             print('Generation' + str(i+1) + '.Loss = ' + str(temp_loss))
-            # print('Hidden 1: '+str(hidden_1_show))
-            # print('Hidden 2: '+str(hidden_2_show))
-            # print('Hidden 3: '+str(hidden_3_show))
 
+    # 用生成的参数按时间跑一边
     for i in range(1, n-5):
         ord_index = np.random.random_integers(i, i+1, 2)
         ord_x = x_data[ord_index]
@@ -115,18 +107,12 @@ if __name__ == "__main__":
 
         sess.run(train_step, feed_dict={X: ord_x, Y: ord_y})
 
-        learning_rate_val = sess.run(learning_rate)
-
         exactY = sess.run(Y, feed_dict={X: ord_x, Y: ord_y})
         preY = sess.run(out, feed_dict={X: ord_x, Y: ord_y})
 
         pre_y_vec.append(preY[0][0])
         exactY_vec.append(exactY[0][0])
 
-        if i % 100 == 0:
-            print(i)
-
-    # print (pre_y_vec)
 
     plt.plot(exactY_vec, 'g-', label="Exact", linewidth=0.2)
     plt.plot(pre_y_vec, 'r-', label="Prediction", linewidth=0.4)
@@ -144,3 +130,13 @@ if __name__ == "__main__":
     plt.legend(loc='upper right')
     plt.show()
 
+
+if __name__ == "__main__":
+    for learning_decay in range(5, 9):
+        for learning_step in range(50, 1000, 10):
+            for i in range(4,129):
+                for j in range(1,i):
+                    for k in range(1,j):
+                        for rounds in range(500,50000,100):
+                            for batch_size in range(5,100):
+                                run_one_time(float(learning_decay)/10,learning_step,i,j,k,batch_size,rounds)
