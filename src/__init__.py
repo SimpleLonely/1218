@@ -127,11 +127,11 @@ if __name__ == "__main__":
             print(i)
 
     # print (pre_y_vec)
-    
-    plt.plot(pre_y_vec, 'b-', label="Prediction")
-    plt.plot(exactY_vec, 'g-', label="Exact")
-    plt.title('Price')
-    plt.xlabel('Generation')
+
+    plt.plot(exactY_vec, 'g-', label="Exact", linewidth=0.2)
+    plt.plot(pre_y_vec, 'r-', label="Prediction", linewidth=0.4)
+    plt.title('Rate @ Time')
+    plt.xlabel('Time')
     plt.ylabel('Rate')
     plt.show()
 
