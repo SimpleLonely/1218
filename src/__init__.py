@@ -16,10 +16,18 @@ def normalize_cols(m):
 sess = tf.InteractiveSession()
 
 
-def run_one_time(LEARNING_RATE_DECAY,LEARNING_RATE_STEP,n_neurons_1 ,n_neurons_2 ,n_neurons_3,batch_size,round):
+def run_one_time(params):
+
+    LEARNING_RATE_DECAY = params["LEARNING_RATE_DECAY"]
+    LEARNING_RATE_STEP = params["LEARNING_RATE_STEP"]
+    n_neurons_1 = params["n_neurons_1"]
+    n_neurons_2 = params["n_neurons_2"]
+    n_neurons_3 = params["n_neurons_3"]
+    batch_size = params["batch_size"]
+    round = params["round"]
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-    data = pd.read_csv('E:\\1218\\1218\\res\\input0420.csv')
+    data = pd.read_csv('../res/input0420.csv')
     n = data.shape[0]
     m = data.shape[1]
     train_start = 1
@@ -46,16 +54,16 @@ def run_one_time(LEARNING_RATE_DECAY,LEARNING_RATE_STEP,n_neurons_1 ,n_neurons_2
     X = tf.placeholder(dtype=tf.float32, shape=[None, n_parameters], name='x-input')
     Y = tf.placeholder(dtype=tf.float32, shape=[None, 1], name='y-input')
 
-    W_hidden_1 = tf.Variable(tf.truncated_normal([n_parameters, n_neurons_1],stddev=1,mean=0))
-    bias_hidden_1 = tf.Variable(tf.truncated_normal([n_neurons_1],mean=0))
+    W_hidden_1 = tf.Variable(tf.truncated_normal([n_parameters, n_neurons_1],stddev=1,mean=0), name="w1")
+    bias_hidden_1 = tf.Variable(tf.truncated_normal([n_neurons_1],mean=0),name="b1")
     hidden_1 = tf.nn.softsign(tf.add(tf.matmul(X, W_hidden_1), bias_hidden_1))
 
-    W_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_1, n_neurons_2],stddev=1,mean=0))
-    bias_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_2],mean=0))
+    W_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_1, n_neurons_2],stddev=1,mean=0), name="w2")
+    bias_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_2],mean=0), name="b2")
     hidden_2 = tf.nn.softsign(tf.add(tf.matmul(hidden_1, W_hidden_2), bias_hidden_2))
 
-    W_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_2, n_neurons_3],stddev=1,mean=0))
-    bias_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_3],mean=0))
+    W_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_2, n_neurons_3],stddev=1,mean=0), name="w3")
+    bias_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_3],mean=0),name="b3")
     hidden_3 = tf.nn.softsign(tf.add(tf.matmul(hidden_2, W_hidden_3), bias_hidden_3))
 
     W_out = tf.Variable(tf.truncated_normal([n_neurons_3, n_target], stddev=1, mean=0))
@@ -72,7 +80,7 @@ def run_one_time(LEARNING_RATE_DECAY,LEARNING_RATE_STEP,n_neurons_1 ,n_neurons_2
 
     init = tf.global_variables_initializer()
     sess.run(init)
-    # saver = tf.train.Saver(...variables...)
+    saver = tf.train.Saver({"w1":W_hidden_1,"w2":W_hidden_2,"w3":W_hidden_3})
     loss_vec = []
     test_loss = []
     pre_y_vec = []
@@ -98,6 +106,8 @@ def run_one_time(LEARNING_RATE_DECAY,LEARNING_RATE_STEP,n_neurons_1 ,n_neurons_2
             print("***********************")
             print("%s steps:rate is %s" % (global_step_val,learning_rate_val))
             print('Generation' + str(i+1) + '.Loss = ' + str(temp_loss))
+        if (i+1)%100 == 0:
+            saver.save(sess,"../result/"+str(n_neurons_1)+"_"+str(n_neurons_2)+"_"+str(n_neurons_3)+"params",global_step=i)
 
     # 用生成的参数按时间跑一边
     for i in range(1, n-5):
@@ -105,7 +115,7 @@ def run_one_time(LEARNING_RATE_DECAY,LEARNING_RATE_STEP,n_neurons_1 ,n_neurons_2
         ord_x = x_data[ord_index]
         ord_y = np.transpose([y_data[ord_index]])
 
-        sess.run(train_step, feed_dict={X: ord_x, Y: ord_y})
+        # sess.run(train_step, feed_dict={X: ord_x, Y: ord_y})
 
         exactY = sess.run(Y, feed_dict={X: ord_x, Y: ord_y})
         preY = sess.run(out, feed_dict={X: ord_x, Y: ord_y})
@@ -113,21 +123,24 @@ def run_one_time(LEARNING_RATE_DECAY,LEARNING_RATE_STEP,n_neurons_1 ,n_neurons_2
         pre_y_vec.append(preY[0][0])
         exactY_vec.append(exactY[0][0])
 
-
+    fig = plt.figure()
     plt.plot(exactY_vec, 'g-', label="Exact", linewidth=0.2)
     plt.plot(pre_y_vec, 'r-', label="Prediction", linewidth=0.4)
     plt.title('Rate @ Time')
     plt.xlabel('Time')
     plt.ylabel('Rate')
+    fig.savefig("../img/"+str('_'.join([str(values) for key,values in params.items()]))+"_Prediction.png")
     plt.show()
 
+    fig = plt.figure()
     plt.plot(loss_vec, 'k-', label='Train Loss')
     plt.plot(test_loss, 'r--', label='Test Loss')
-
     plt.title('Loss per Generation')
     plt.xlabel('Generation')
     plt.ylabel('Loss')
     plt.legend(loc='upper right')
+
+    fig.savefig("../img/loss/"+str('_'.join([str(values) for key,values in params.items()]))+"_Loss.png")
     plt.show()
 
 
@@ -137,6 +150,7 @@ if __name__ == "__main__":
             for i in range(4,129):
                 for j in range(1,i):
                     for k in range(1,j):
-                        for rounds in range(500,50000,100):
+                        for rounds in range(50,50000,100):
                             for batch_size in range(5,100):
-                                run_one_time(float(learning_decay)/10,learning_step,i,j,k,batch_size,rounds)
+                                params = {"LEARNING_RATE_DECAY":float(learning_decay)/10,"LEARNING_RATE_STEP":learning_step,"n_neurons_1":i,"n_neurons_2":j,"n_neurons_3":k,"batch_size":batch_size,"round":rounds}
+                                run_one_time(params)
