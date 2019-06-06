@@ -18,8 +18,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1932">
-              <caret line="19" column="30" lean-forward="true" selection-start-line="19" selection-start-column="30" selection-end-line="19" selection-end-column="30" />
+            <state relative-caret-position="-1953">
+              <caret line="18" column="30" lean-forward="true" selection-start-line="18" selection-start-column="30" selection-end-line="18" selection-end-column="30" />
               <folding>
                 <element signature="e#15#38#0" expanded="true" />
               </folding>
@@ -158,7 +158,7 @@
       <workItem from="1558336923874" duration="34000" />
       <workItem from="1558599260718" duration="5446000" />
       <workItem from="1558664892931" duration="14000" />
-      <workItem from="1559806388915" duration="4188000" />
+      <workItem from="1559806388915" duration="4260000" />
     </task>
     <task id="LOCAL-00001" summary="3月28日数据结构课上，准备修改之前">
       <created>1553757166330</created>
@@ -178,7 +178,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="11266000" />
+    <option name="totallyTimeSpent" value="11338000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -197,7 +197,7 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.6734007" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.6734007" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.63461536" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -304,8 +304,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1932">
-          <caret line="19" column="30" lean-forward="true" selection-start-line="19" selection-start-column="30" selection-end-line="19" selection-end-column="30" />
+        <state relative-caret-position="-1953">
+          <caret line="18" column="30" lean-forward="true" selection-start-line="18" selection-start-column="30" selection-end-line="18" selection-end-column="30" />
           <folding>
             <element signature="e#15#38#0" expanded="true" />
           </folding>
