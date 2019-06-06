@@ -4,10 +4,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+from tensorflow.python import debug as tf_debug
 
-LEARNING_RATE_BASE = 0.1
-LEARNING_RATE_DECAY = 0.8
-LEARNING_RATE_STEP = 100
+LEARNING_RATE_BASE = 1e-3
+LEARNING_RATE_DECAY = 0.98
+LEARNING_RATE_STEP = 300
 
 
 def normalize_cols(m):
@@ -17,6 +18,10 @@ def normalize_cols(m):
 
 
 sess = tf.InteractiveSession()
+
+sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+
+sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
 
 if __name__ == "__main__":
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -51,16 +56,16 @@ if __name__ == "__main__":
     X = tf.placeholder(dtype=tf.float32, shape=[None, n_parameters], name='x-input')
     Y = tf.placeholder(dtype=tf.float32, shape=[None, 1], name='y-input')
 
-    W_hidden_1 = tf.Variable(tf.truncated_normal([n_parameters, n_neurons_1],stddev=1,mean=0))
-    bias_hidden_1 = tf.Variable(tf.truncated_normal([n_neurons_1],mean=0))
+    W_hidden_1 = tf.Variable(tf.truncated_normal([n_parameters, n_neurons_1], stddev=1, mean=0))
+    bias_hidden_1 = tf.Variable(tf.truncated_normal([n_neurons_1], mean=0))
     hidden_1 = tf.nn.softsign(tf.add(tf.matmul(X, W_hidden_1), bias_hidden_1))
 
-    W_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_1, n_neurons_2],stddev=1,mean=0))
-    bias_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_2],mean=0))
-    hidden_2 = tf.nn.softsign(tf.add(tf.matmul(hidden_1, W_hidden_2), bias_hidden_2))
+    W_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_1, n_neurons_2], stddev=1, mean=0))
+    bias_hidden_2 = tf.Variable(tf.truncated_normal([n_neurons_2], mean=0))
+    hidden_2 = tf.nn.tanh(tf.add(tf.matmul(hidden_1, W_hidden_2), bias_hidden_2))
 
-    W_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_2, n_neurons_3],stddev=1,mean=0))
-    bias_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_3],mean=0))
+    W_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_2, n_neurons_3], stddev=1, mean=0))
+    bias_hidden_3 = tf.Variable(tf.truncated_normal([n_neurons_3], mean=0))
     hidden_3 = tf.nn.softsign(tf.add(tf.matmul(hidden_2, W_hidden_3), bias_hidden_3))
 
     W_out = tf.Variable(tf.truncated_normal([n_neurons_3, n_target], stddev=1, mean=0))
@@ -83,8 +88,10 @@ if __name__ == "__main__":
     pre_y_vec = []
     exactY_vec = []
     batch_size = 20
+    step = 2000
+    last_lost = 0
 
-    for i in range(200):
+    for i in range(step):
         rand_index = np.random.choice(len(x_train), size=batch_size)
         rand_x = x_train[rand_index]
         rand_y = np.transpose([y_train[rand_index]])
@@ -94,19 +101,39 @@ if __name__ == "__main__":
         learning_rate_val = sess.run(learning_rate)
         global_step_val = sess.run(global_step)
 
+        #temp_w1 = sess.run(W_hidden_1, feed_dict={X: rand_x, Y: rand_y})
+        #temp_b1 = sess.run(bias_hidden_1, feed_dict={X: rand_x, Y: rand_y})
+        #temp_h1 = sess.run(hidden_1, feed_dict={X: rand_x, Y: rand_y})
+        #temp_h2 = sess.run(hidden_2, feed_dict={X: rand_x, Y: rand_y})
+        #temp_h3 = sess.run(hidden_3, feed_dict={X: rand_x, Y: rand_y})
+        #temp_out = sess.run(out, feed_dict={X: rand_x, Y: rand_y})
+        # temp_x = sess.run(X, feed_dict={X: rand_x, Y: rand_y})
+        #temp_y = sess.run(Y, feed_dict={X: rand_x, Y: rand_y})
         temp_loss = sess.run(loss, feed_dict={X: rand_x, Y: rand_y})
         loss_vec.append(np.sqrt(temp_loss))
 
         test_temp_loss = sess.run(loss, feed_dict={X: x_test, Y: np.transpose([y_test])})
         test_loss.append(np.sqrt(test_temp_loss))
 
+        if (last_lost - temp_loss) * (last_lost - temp_loss) <= 1:
+            print("It's the end!")
+
+        last_lost = temp_loss
+
         if(i+1) % 5 == 0:
             print("***********************")
             print("%s steps:rate is %s" % (global_step_val,learning_rate_val))
             print('Generation' + str(i+1) + '.Loss = ' + str(temp_loss))
-            # print('Hidden 1: '+str(hidden_1_show))
-            # print('Hidden 2: '+str(hidden_2_show))
-            # print('Hidden 3: '+str(hidden_3_show))
+
+        if np.isnan(temp_loss):
+            print("When NAN showed up: ")
+            #print("X:" + str(temp_x))
+            #print("W_Hidden_1:" + str(temp_w1))
+            #print("Bias_Hidden_1:" + str(temp_b1))
+            #print("Hidden_1:" + str(temp_h1))
+            #print("Y:"+str(temp_y))
+            #print("out:"+str(temp_out))
+            exit(0)
 
     for i in range(1, n-5):
         ord_index = np.random.random_integers(i, i+1, 2)
