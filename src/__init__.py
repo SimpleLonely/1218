@@ -19,9 +19,9 @@ def normalize_cols(m):
 
 sess = tf.InteractiveSession()
 
-sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+# sess = tf_debug.LocalCLIDebugWrapperSession(sess)
 
-sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
+# sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
 
 if __name__ == "__main__":
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -74,7 +74,8 @@ if __name__ == "__main__":
 
     global_step = tf.Variable(0, trainable=False)
 
-    loss = tf.reduce_mean(np.square(out-Y))
+    # loss = tf.reduce_mean(np.square(out-Y))
+    loss = -tf.reduce_mean(out * tf.log(tf.clip_by_value(Y, 1e-10, 1.0)))
 
     learning_rate = tf.train.exponential_decay(LEARNING_RATE_BASE, global_step, LEARNING_RATE_STEP, LEARNING_RATE_DECAY, staircase=True)
     my_opt = tf.train.GradientDescentOptimizer(learning_rate)
