@@ -4,33 +4,49 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-LEARNING_RATE_BASE = 1e-3
+LEARNING_RATE_BASE = 1e-2
 LEARNING_RATE_DECAY = 0.98
-LEARNING_RATE_STEP = 300
+LEARNING_RATE_STEP = 100
 
 sess = tf.Session()
 
 
 def normalize_cols(m1):
-    col_max = m1.max(axis=0)
     col_min = m1.min(axis=0)
+    col_max = m1.max(axis=0)
+    # plt.plot(m1 / (col_max - col_min))
+    # plt.show()
     return (m1 - col_min) / (col_max - col_min)
+    # col_u = m1.mean(axis=0)
+    # col_std = m1.std(axis=0)
+    # plt.plot((m1 - col_u) / 2.414 / col_std)
+    # plt.show()
+    # return (m1 - col_u) / 4.414 / col_std
+
+
+def reverse_normalize_cols(m1, m2):
+    col_min = m1.min(axis=0)
+    col_max = m1.max(axis=0)
+    return m2 * (col_max - col_min) + col_min
+    # col_u = m1.mean(axis=0)
+    # col_std = m1.std(axis=0)
+    # return m2 * 4.414 * col_std + col_u
 
 
 def init_variable(shape):
-    return tf.Variable(tf.truncated_normal(shape))
+    return tf.Variable(tf.truncated_normal(shape, mean=0, stddev=1))
 
 
 def logistic(input_layer, multiplication_weight, bias_weight, activation=True):
     layer = tf.add(tf.matmul(input_layer, multiplication_weight), bias_weight)
     if activation:
-        return tf.nn.sigmoid(layer)
+        return tf.nn.softsign(layer)
     else:
         return layer
 
 
 # import data
-data = pd.read_csv('../res/input0000.csv')
+data = pd.read_csv('../res/input0701.csv')
 n = data.shape[0]
 m = data.shape[1]
 train_start = 1
@@ -41,15 +57,15 @@ test_end = n
 data_train = data.loc[train_start: train_end]
 data_test = data.loc[test_start: test_end]
 
-y_train = data_train.ix[:, 0]
-y_test = data_test.ix[:, 0]
+y_train = np.nan_to_num(normalize_cols(data_train.ix[:, 0]))
+y_test = np.nan_to_num(normalize_cols(data_test.ix[:, 0]))
 x_test = np.nan_to_num(normalize_cols(data_test.ix[:, 2:]))
 x_train = np.nan_to_num(normalize_cols(data_train.ix[:, 2:]))
 
-n_parameters = 2
-n_neurons_1 = 2
-n_neurons_2 = 2
-n_neurons_3 = 2
+n_parameters = 31
+n_neurons_1 = 100
+n_neurons_2 = 50
+n_neurons_3 = 3
 n_target = 1
 
 X = tf.placeholder(dtype=tf.float32, shape=[None, n_parameters], name='x-input')
@@ -73,8 +89,8 @@ out = logistic(L3, A0, B0)
 
 global_step = tf.Variable(0, trainable=False)
 
-loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=out, logits=Y))
-# loss = tf.reduce_mean(tf.squared_difference(out, Y))
+# loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=out, logits=Y))
+loss = tf.reduce_mean(tf.squared_difference(out, Y))
 
 learning_rate = tf.train.exponential_decay(LEARNING_RATE_BASE, global_step, LEARNING_RATE_STEP, LEARNING_RATE_DECAY,
                                            staircase=True)
@@ -84,14 +100,10 @@ train_step = my_opt.minimize(loss, global_step=global_step)
 init = tf.global_variables_initializer()
 sess.run(init)
 
-prediction = tf.round(tf.nn.sigmoid(out))
-predictions_correct = tf.cast(tf.equal(prediction, Y), tf.float32)
-accuracy = tf.reduce_mean(predictions_correct)
-
 loss_vec = []
 
 batch_size = 20
-step = 1000
+step = 2000
 
 for i in range(step):
     rand_index = np.random.choice(np.arange(1, len(x_train)), size=batch_size)
@@ -112,12 +124,24 @@ plt.xlabel('Generation')
 plt.ylabel('Loss')
 plt.show()
 
-exactY = np.transpose([y_train])
-preY = sess.run(out, feed_dict={X: x_train, Y: np.transpose([y_train])})
+exactY_train = reverse_normalize_cols(data_train.ix[:, 0], np.transpose([y_train]))
+preY0_train = sess.run(out, feed_dict={X: x_train, Y: np.transpose([y_train])})
+preY1_train = reverse_normalize_cols(data_train.ix[:, 0], preY0_train)
 
-plt.plot(exactY, 'g-', label="Exact", linewidth=0.2)
-plt.plot(preY, 'r-', label="Prediction", linewidth=0.4)
-plt.title('Rate @ Time')
+plt.plot(exactY_train, 'g-', label="Exact", linewidth=0.2)
+plt.plot(preY1_train, 'r-', label="Prediction", linewidth=0.4)
+plt.title('Rate_train @ Time')
 plt.xlabel('Time')
-plt.ylabel('Rate')
+plt.ylabel('Rate_train')
+plt.show()
+
+exactY_test = reverse_normalize_cols(data_test.ix[:, 0], np.transpose([y_test]))
+preY0_test = sess.run(out, feed_dict={X: x_test, Y: np.transpose([y_test])})
+preY1_test = reverse_normalize_cols(data_test.ix[:, 0], preY0_test)
+
+plt.plot(exactY_test, 'g-', label="Exact", linewidth=0.2)
+plt.plot(preY1_test, 'r-', label="Prediction", linewidth=0.4)
+plt.title('Rate_test @ Time')
+plt.xlabel('Time')
+plt.ylabel('Rate_test')
 plt.show()
