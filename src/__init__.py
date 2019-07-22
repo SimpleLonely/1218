@@ -27,7 +27,7 @@ def run_one_time(params):
     round = params["round"]
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-    data = pd.read_csv('../res/input0420.csv')
+    data = pd.read_csv('../res/input0701.csv')
     n = data.shape[0]
     m = data.shape[1]
     train_start = 1
