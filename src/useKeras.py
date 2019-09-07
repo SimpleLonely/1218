@@ -31,8 +31,8 @@ x_train = np.nan_to_num(normalize_cols(x_train))
 
 model = Sequential()
 model.add(Dense(units=64, activation='relu', input_dim=31))
-model.add(Dense(units=64, activation='relu'))
-model.add(Dense(units=1, activation='softmax')) 
+model.add(Dense(units=32, activation='relu'))
+model.add(Dense(units=1, activation='relu'))
 model.compile(optimizer='rmsprop',loss='mse')
 # x_train 和 y_train 是 Numpy 数组 -- 就像在 Scikit-Learn API 中一样。
 model.fit(x_train, y_train, epochs=5, batch_size=32)
@@ -52,9 +52,30 @@ model.save("model.h5")
 
 # 绘制训练 & 验证的损失值
 # plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('Model loss')
-plt.ylabel('Loss')
-plt.xlabel('Epoch')
-plt.legend(['Train', 'Test'], loc='upper left')
+# plt.plot(history.history['val_loss'])
+# plt.title('Model loss')
+# plt.ylabel('Loss')
+# plt.xlabel('Epoch')
+# plt.legend(['Train', 'Test'], loc='upper left')
+# plt.show()
+
+preY_vec = []
+exacY_vec = []
+# ord_x = x_data.iloc[[0],:]
+# preY = model.predict(ord_x)
+# print(float(preY[0]))
+# 用生成的参数按时间跑一边
+print(x_data)
+for i in range(0, n-5):
+    ord_x = x_data[i].reshape(1,31)
+    preY = model.predict(ord_x)
+    preY_vec.append(float(preY[0]))
+    exacY_vec.append(y_data.iloc[i])
+print (exacY_vec)
+fig = plt.figure()
+plt.plot(exacY_vec, 'g-', label="Exact", linewidth=0.2)
+plt.plot(preY_vec, 'r-', label="Prediction", linewidth=0.4)
+plt.title('Rate @ Time')
+plt.xlabel('Time')
+plt.ylabel('Rate')
 plt.show()
