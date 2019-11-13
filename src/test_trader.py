@@ -15,7 +15,7 @@ class Trader:
         self.puts_value = (-1) * put_positon * present_price * 100 # 空仓价值
         self.margin = margin # 需要的保证金
         # 该用户的交易记录本，时间、价格、成交量、多仓位、空仓位、余额、所需保证金、交易类型。 
-        self.records = pd.DataFrame(columns=['time', 'trade_price', 'amt', 'call_pos', 'put_pos', 'balance', 'margin', 'trade_type'])
+        self.records = pd.DataFrame(columns=['time', 'trade_price', 'amt', 'call_pos', 'put_pos', 'balance', 'margin', 'trade_type', 'call_val', 'put_val'])
         self.id = 1
 
     # 买开仓，输入成交量、当前价格、时间（指所用日期，可以用index代替）
@@ -36,7 +36,9 @@ class Trader:
                     'put_pos':self.put_position,
                     'balance':self.balance,
                     'margin':self.margin,
-                    'trade_type':'buy_open'
+                    'trade_type':'buy_open',
+                    'call_val':self.calls_value,
+                    'put_val':self.puts_value
                 },index=[self.id]) # 新建记录
                 self.id = self.id +1
                 self.records = self.records.append(new) # 插入记录
@@ -63,7 +65,9 @@ class Trader:
                     'put_pos':self.put_position,
                     'balance':self.balance,
                     'margin':self.margin,
-                    'trade_type':'sell_open'
+                    'trade_type':'sell_open',
+                    'call_val':self.calls_value,
+                    'put_val':self.puts_value
                 },index=[self.id])
                 self.id = self.id +1
                 self.records = self.records.append(new) # 插入记录
@@ -86,7 +90,9 @@ class Trader:
                 'put_pos': self.put_position,
                 'balance': self.balance,
                 'margin': self.margin,
-                'trade_type': 'buy_close'
+                'trade_type': 'buy_close',
+                'call_val':self.calls_value,
+                'put_val':self.puts_value
             },index=[self.id])
             self.id = self.id +1
             self.records = self.records.append(new) # 插入记录
@@ -107,7 +113,9 @@ class Trader:
                 'put_pos': self.put_position,
                 'balance': self.balance,
                 'margin': self.margin,
-                'trade_type': 'sell_close'
+                'trade_type': 'sell_close',
+                'call_val':self.calls_value,
+                'put_val':self.puts_value
             },index=[self.id])
             self.id = self.id +1
             self.records = self.records.append(new) # 插入记录
@@ -119,13 +127,17 @@ class Trader:
     def settle(self, price, time):
         modified_calls_value = price * self.call_position * 100
         modified_puts_value = (-1) * price * self.put_position * 100
-        balance_chg = (modified_calls_value - self.calls_value) + (modified_puts_value - self.puts_value)
+        balance_chg = (modified_calls_value - self.calls_value) - (modified_puts_value - self.puts_value)
         print('Balance changed: ' + str(balance_chg))
+        self.puts_value = modified_puts_value
+        self.calls_value = modified_calls_value
         new_balance = self.balance + balance_chg
         if new_balance < (self.force_close_level * self.margin):
-            self.balance = 0
+            self.balance = new_balance
             self.call_position = 0
             self.put_position = 0
+            self.puts_value = 0
+            self.calls_value = 0
             self.margin = 0
 
         elif new_balance < self.margin:
@@ -143,7 +155,9 @@ class Trader:
                 'put_pos': self.put_position,
                 'balance': self.balance,
                 'margin': self.margin,
-                'trade_type': 'settle'
+                'trade_type': 'settle',
+                'call_val':self.calls_value,
+                'put_val':self.puts_value
         },index=[self.id])
         self.id = self.id +1
         self.records = self.records.append(new) # 
