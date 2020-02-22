@@ -190,7 +190,9 @@
       <workItem from="1569305185255" duration="731000" />
       <workItem from="1569397300047" duration="794000" />
       <workItem from="1569948073355" duration="1920000" />
-      <workItem from="1580372762488" duration="14173000" />
+      <workItem from="1580372762488" duration="15161000" />
+      <workItem from="1580466756974" duration="5207000" />
+      <workItem from="1580546534577" duration="15000" />
     </task>
     <task id="LOCAL-00001" summary="3月28日数据结构课上，准备修改之前">
       <created>1553757166330</created>
@@ -257,7 +259,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
