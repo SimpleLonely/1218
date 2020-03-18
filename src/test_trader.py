@@ -159,7 +159,7 @@ class Trader:
                 'long_val':self.longs_value,
                 'short_val':self.shorts_value
         },index=[self.id])
-        self.id = self.id +1
+        self.id = self.id + 1
         self.records = self.records.append(new) # 
         print("This day is over.")
     # def settle(self, buy_price, sell_price, time):
