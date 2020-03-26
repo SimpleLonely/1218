@@ -140,6 +140,10 @@ def my_backtest(mydata, log=False, drawpic=False, iplot=False):
     print('Final Portfolio Value: %.2f' % final_value)
     if drawpic:
         cerebro.plot(iplot=iplot,volume=False)
-    print('Sharpe: {:.2f}'.format(thestrats[0].analyzers.sharpe.get_analysis()['sharperatio']))
-    print('Max drawdown: {:.2f}%'.format(thestrats[0].analyzers.dd.get_analysis()['max']['drawdown']))
-    print('Annual rate: {:.2f}%'.format(thestrats[0].analyzers.returns.get_analysis()['rnorm100']))
+    sharpe = thestrats[0].analyzers.sharpe.get_analysis()['sharperatio']
+    dd = thestrats[0].analyzers.dd.get_analysis()['max']['drawdown']
+    ar = thestrats[0].analyzers.returns.get_analysis()['rnorm100']
+    print('Sharpe: {:.2f}'.format(sharpe))
+    print('Max drawdown: {:.2f}%'.format(dd))
+    print('Annual rate: {:.2f}%'.format(ar))
+    return sharpe,dd,ar
