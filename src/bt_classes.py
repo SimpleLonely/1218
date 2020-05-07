@@ -129,7 +129,7 @@ def my_backtest(mydata, log=False, drawpic=False, iplot=False):
     init_value= 100000.0
     cerebro.broker.setcash(init_value)
     cerebro.broker.setcommission(commission=50,margin=1000,mult=100)
-    cerebro.addanalyzer(bt.analyzers.SharpeRatio_A, _name='sharpe')
+    cerebro.addanalyzer(bt.analyzers.SharpeRatio_A, _name='sharpe', timeframe=bt.TimeFrame.Days)
     cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='trade')
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name='dd')
     cerebro.addanalyzer(bt.analyzers.Returns, _name='returns')
