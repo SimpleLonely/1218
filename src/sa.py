@@ -104,9 +104,9 @@ def get_ats(
                 ats = np.append(ats, layer_matrix, axis=1)
                 layer_matrix = None
 
-    if save_path is not None:
-        np.save(save_path[0], ats)
-        np.save(save_path[1], pred)
+    # if save_path is not None:
+    #     np.save(save_path[0], ats)
+    #     np.save(save_path[1], pred)
 
     return ats, pred
 
