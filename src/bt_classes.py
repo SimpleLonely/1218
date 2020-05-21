@@ -1,8 +1,10 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 import backtrader as bt
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, precision_score, recall_score, log_loss
+import seaborn as sns
 
 class MyPandasData(bt.feeds.PandasData):
     lines = ('label',)
@@ -156,16 +158,31 @@ def my_backtest(mydata, log=False, drawpic=False, iplot=False):
 
 # 失效的衡量：单点不算，而是去度量一个时间窗内的数据，比如说一个时间窗里的收益率、回撤、精确率准确率召回率、最大连续错误、交叉熵、
 class test_indicator():
-    def __init__(self, y_true, y_pred):
+    def __init__(self, y_true, y_pred, test_df=None):
         assert len(y_pred) == len(y_true), f'Length of y is {len(y_pred)} while y_pred {len(y_true)}'
         self.y_pred = y_pred
         self.y_true = y_true
-        self.suc_fail, fail_suc = np.array(self.successive_distribution())
+        self.suc_fail, self.fail_suc = np.array(self.successive_distribution())
         # 算这个比例是否要加权？
-        self.successive_n_failure_rate = None
-        self.period_entropy = None
-        self.period_drawback = None
-        self.volatility = None
+        self.status_prob = self.get_status_win_rate()
+        self.test_df = test_df
+        if test_df is not None:
+            test_df['label'] = y_pred
+            # self.sharpe, self.drawdown, self.annual = my_backtest(test_df)
+
+    def adjust_label(self):
+        test_df = self.test_df
+        test_df['y_true'] = self.y_true
+        test_df['y_pred'] = self.y_pred
+        test_df['win'] = -1
+        test_df['win'].loc[test_df['y_true']==test_df['y_pred']] = 1
+        test_df['suc_num'] = np.nan
+        test_df['suc_num'].loc[test_df['win']!=test_df['win'].shift(1)] = 1
+        test_df['suc_num'] = test_df['suc_num'].cumsum().fillna(method='ffill')
+        test_df['suc_num'] = test_df.groupby('suc_num')['suc_num'].cumsum() / test_df['suc_num'] * test_df['win']
+        test_df['suc_rate'] = test_df['suc_num'].map(self.status_prob)
+        test_df['label'].loc[test_df['suc_rate']<0.5] = 1 - test_df['label'].loc[test_df['suc_rate']<0.5]
+        return test_df['label']
 
     def successive_distribution(self):
         y_output = self.y_pred
@@ -206,7 +223,6 @@ class test_indicator():
         suc_result = pd.DataFrame(self.suc_fail).sort_index(ascending=False)
         sns.heatmap(suc_result.iloc[:-1,1:],cmap='Blues',annot=True, fmt='.0f')
         plt.yticks(rotation=0)
-        ax = plt.gca()
         plt.xlabel('Successive Wrong',fontsize=16)
         plt.ylabel('Successive Correct',fontsize=16)
         plt.show()
@@ -214,12 +230,11 @@ class test_indicator():
 
     def plot_fail_suc(self):
         plt.figure(figsize=(16,10))
-        fail_result = pd.DataFrame(self.suc_fail).sort_index(ascending=False)
+        fail_result = pd.DataFrame(self.fail_suc).sort_index(ascending=False)
         sns.heatmap(fail_result.iloc[:-1,1:],cmap='Blues',annot=True, fmt='.0f')
         plt.yticks(rotation=0)
-        ax = plt.gca()
-        plt.xlabel('Successive Wrong',fontsize=16)
-        plt.ylabel('Successive Correct',fontsize=16)
+        plt.xlabel('Successive Correct',fontsize=16)
+        plt.ylabel('Successive Wrong',fontsize=16)
         plt.show()
         plt.close()
 
@@ -256,6 +271,40 @@ class test_indicator():
     def get_entropy(self):
         # TODO: calculate entropy
         return log_loss(self.y_true, self.y_pred,labels=[0,1])
+
+
+    def backtest(self,prob_adjusted=False,log=False,drawpic=False,iplot=False):
+        assert self.test_df is not None, 'test_df is not allocated.'
+        test_df = self.test_df
+        if prob_adjusted:
+            test_df['label'] = self.adjust_label()
+            test_df['y_true'] = self.y_true
+            win_rate = (test_df['label']==test_df['y_true']).value_counts(True)[True]
+            print(f'Adjusted accuracy: {win_rate:.4f}')
+        else:
+            print(f'Accuracy: {self.get_accuracy():.4f}')
+        return my_backtest(test_df,log=log,drawpic=drawpic,iplot=iplot)
+
+    def get_status_win_rate(self):
+        suc_result = self.suc_fail
+        fail_result = self.fail_suc
+        status_porb = {}
+        for i in range(len(suc_result)):
+            fail = np.sum([j*suc_result[i][j] for j in range(len(suc_result[i]))])
+            if i+1 < len(suc_result):
+                success = np.sum([j*np.sum(suc_result[j]) for j in range(i+1,len(suc_result))])
+            else: 
+                success = 0
+            status_porb[i] = success / (success + fail)
+
+        for i in range(len(fail_result)):
+            success = np.sum([j*fail_result[i][j] for j in range(len(fail_result[i]))])
+            if i+1 < len(fail_result):
+                fail = np.sum([j*np.sum(fail_result[j]) for j in range(i+1,len(fail_result))])
+            else: 
+                fail = 0
+            status_porb[-i] = success / (success + fail)
+        return status_porb
 
     def get_drawback(self):
         # TODO: calculate maximum drawback of this phrase.
