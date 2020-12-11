@@ -4,11 +4,14 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import logging
+from nmutant_model import adapter_model
 import sys
 
 import numpy as np
 from six.moves import xrange
 from tensorflow.python.platform import flags
+import keras
+
 
 sys.path.append("c:\\WorkSpace\\DRTest\\")
 
@@ -21,6 +24,7 @@ from nmutant_util.configs import path
 from nmutant_util.utils_imgproc import preprocess_image_1
 from nmutant_util.utils_file import get_data_file
 
+from keras import backend as K
 FLAGS = flags.FLAGS
 
 model_dict = {"sub":sub_model,
@@ -49,7 +53,7 @@ def model_training(datasets, model_name, samples_path=None, nb_epochs=6, batch_s
         y = np.zeros(10)
         y[label] = 1
         return y
-
+      
     if samples_path != None:
         [image_list, image_files, real_labels, predicted_labels] = get_data_file(samples_path)
         #samples_adv = np.asarray([preprocess_image_1(image.astype('float64')) for image in image_list])
@@ -187,37 +191,55 @@ def submodel_training(datasets, submodel_name, target_model, batch_size=256,lear
 
 def model_load(datasets, model_name, de=False, epoch=9, attack='fgsm', mu=False, mu_var='gf'):
 
-    config = tf.ConfigProto()
-    #config.gpu_options.per_process_gpu_memory_fraction = 0.7
-    config.gpu_options.allow_growth = True
-    # Create TF session and set as Keras backend session
-    sess = tf.Session(config=config)
-    print("Created TensorFlow session.")
-
-    set_log_level(logging.DEBUG)
-    input_shape, nb_classes = get_shape(datasets)
-    x = tf.placeholder(tf.float32, shape=input_shape)
-    y = tf.placeholder(tf.float32, shape=(None, nb_classes))
-
-    feed_dict = None
-
-    model = model_dict[model_name](input_shape, nb_classes, False)
-
-    preds = model(x)
-    print("Defined TensorFlow model graph.")
     
-    if mu==False:
-        if True == de:
-            model_path = path.de_model_path + attack + '\\' + datasets + "_" + model_name +  '\\' + str(epoch) + '\\' + model_name + '.model'
-        else:
-            model_path=path.model_path+datasets+'_'+model_name+'\\'+str(epoch)+'\\'+model_name+'.model'
+    if model_name == "GoldModel":
+        sess = tf.Session()
+        K.set_session(sess)
+        def return_loss(y_true, y_pred):
+            # pos = K.sign(y_pred)
+            loss = -K.mean(y_pred * y_true)
+            return loss
+        model = keras.models.load_model("C:\\WorkSpace\\DRTest\\file\\dnn_32_16.h5",custom_objects={'return_loss': return_loss})
+        input_shape, nb_classes = get_shape(datasets)
+        model = adapter_model.AdapterModel(model,input_shape)
+        preds = None
+        feed_dict = None
+        
+        x = tf.placeholder(tf.float32, shape=input_shape)
+        y = tf.placeholder(tf.float32, shape=(None, nb_classes))
+
+        return sess, preds, x, y, model, feed_dict
     else:
-        model_path=path.mu_model_path+mu_var+'\\'+datasets+'_'+model_name+'\\0\\'+ datasets + "_" + model_name + '.model'
+        config = tf.ConfigProto()
+        #config.gpu_options.per_process_gpu_memory_fraction = 0.7
+        config.gpu_options.allow_growth = True
+        # Create TF session and set as Keras backend session
+        sess = tf.Session()
+        
+        print("Created TensorFlow session.")
 
-    saver = tf.train.Saver()
-    saver.restore(sess, model_path)
+        set_log_level(logging.DEBUG)
+        input_shape, nb_classes = get_shape(datasets)
+        x = tf.placeholder(tf.float32, shape=input_shape)
+        y = tf.placeholder(tf.float32, shape=(None, nb_classes))
 
-    return sess, preds, x, y, model, feed_dict
+        feed_dict = None
+        model = model_dict[model_name](input_shape, nb_classes, False)
+        preds = model(x)
+        print("Defined TensorFlow model graph.")
+        
+        if mu==False:
+            if True == de:
+                model_path = path.de_model_path + attack + '\\' + datasets + "_" + model_name +  '\\' + str(epoch) + '\\' + model_name + '.model'
+            else:
+                model_path=path.model_path+datasets+'_'+model_name+'\\'+str(epoch)+'\\'+model_name+'.model'
+        else:
+            model_path=path.mu_model_path+mu_var+'\\'+datasets+'_'+model_name+'\\0\\'+ datasets + "_" + model_name + '.model'
+
+        saver = tf.train.Saver()
+        saver.restore(sess, model_path)
+
+        return sess, preds, x, y, model, feed_dict
 
 def sub_model_load(sess, datasets, submodel_name, target_model, epoch='9'):
     # This is only useful for blackbox

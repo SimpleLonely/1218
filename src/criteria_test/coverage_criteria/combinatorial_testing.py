@@ -38,8 +38,7 @@ def ct(datasets, model_name, samples_path, t=2, p=0.5, de='False', attack='fgsm'
             print("Just adv")
 
     tf.reset_default_graph()
-    sess, preds, x, y, model, feed_dict = model_load(datasets=datasets, model_name=model_name, de=de, attack=attack,
-                                                     epoch=epoch)
+    sess, preds, x, y, model, feed_dict = model_load(datasets=datasets, model_name=model_name, de=de, attack=attack,epoch=epoch)
     layers_combination = neuron_combination(t, model, x)
     sess.close()
     del sess, preds, x, y, model, feed_dict

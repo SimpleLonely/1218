@@ -60,15 +60,14 @@ def multi_testing_criteria(datasets, model_name, samples_path, std_range = 0.0, 
     if not os.path.exists(store_path):
         os.makedirs(store_path)
         tf.reset_default_graph()
-        sess, preds, x, y, model, feed_dict = model_load(datasets=datasets, model_name=model_name, de=de, attack=attack,
-                                                         epoch=epoch)
+        sess, preds, x, y, model, feed_dict = model_load(datasets=datasets, model_name=model_name, de=de, attack=attack,epoch=epoch)
         boundary = neuron_boundary(sess, x, X_train_boundary, model, feed_dict)
         sess.close()
         del sess, preds, x, y, model, feed_dict
         gc.collect()
         np.save(store_path + "boundary.npy", np.asarray(boundary))
     else:
-        boundary = np.load(store_path + "boundary.npy").tolist()
+        boundary = np.load(store_path + "boundary.npy",allow_pickle=True).tolist()
 
     k_coverage, boundary_coverage, neuron_number = init_coverage_metric(boundary, k_n)
 
@@ -100,7 +99,7 @@ def multi_testing_criteria(datasets, model_name, samples_path, std_range = 0.0, 
             del sess, preds, x, y, model, feed_dict, input_data
             gc.collect()
         else:
-            layers_output = np.load(store_path + 'layers_output_' + str(num) + '.npy')
+            layers_output = np.load(store_path + 'layers_output_' + str(num) + '.npy',allow_pickle=True)
 
         k_coverage, boundary_coverage = update_multi_coverage_neuron(layers_output, k_n, boundary, k_coverage, boundary_coverage, std_range)
 
