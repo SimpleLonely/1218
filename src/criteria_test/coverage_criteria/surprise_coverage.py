@@ -225,8 +225,8 @@ def main(argv=None):
        epoch=FLAGS.epoch)
 
 if __name__ == '__main__':
-    flags.DEFINE_string('datasets', 'mnist', 'The target datasets.')
-    flags.DEFINE_string('model', 'lenet1', 'The name of model')
+    flags.DEFINE_string('datasets', 'gold', 'The target datasets.')
+    flags.DEFINE_string('model', 'GoldModel', 'The name of model')
     flags.DEFINE_string('samples', 'test', 'The path to load samples.')  # '../mt_result/mnist_jsma/adv_jsma'
     flags.DEFINE_integer('layer', -3,'the layer for calculating activation trace')
     flags.DEFINE_integer('sections', 1000, 'the number of sections for calculating coverage')

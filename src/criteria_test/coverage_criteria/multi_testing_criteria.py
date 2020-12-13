@@ -13,7 +13,7 @@ import tensorflow as tf
 from tensorflow.python.platform import flags
 import math
 
-sys.path.append("c:\\WorkSpace\\DRTest\\")
+# sys.path.append("c:\\WorkSpace\\DRTest\\")
 
 from nmutant_model.model_operation import model_load
 from coverage_criteria.utils import neuron_boundary, calculate_layers, update_multi_coverage_neuron, calculate_coverage_layer, init_coverage_metric

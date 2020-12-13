@@ -2,10 +2,12 @@ import sys
 from sklearn.preprocessing import StandardScaler
 import numpy as np    
 import pandas as pd 
+import os
 
-sys.path.append("c:\\WorkSpace\\DRTest\\")
-def data_gold(datadir='data\\close_df.csv', train_test_split = 7000):
-    
+
+def data_gold(datadir='res\\close_df.csv', train_test_split = 7000):
+    current_path = os.path.dirname(__file__)
+    print(os.getcwd())
     close_df = pd.read_csv(datadir,index_col=0)
     close_df.head()
 

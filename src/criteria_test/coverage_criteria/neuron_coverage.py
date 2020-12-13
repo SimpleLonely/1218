@@ -11,7 +11,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.platform import flags
 
-sys.path.append("c:\\WorkSpace\\DRTest\\")
+# sys.path.append("c:\\WorkSpace\\DRTest\\")
 
 from nmutant_model.model_operation import model_load
 from coverage_criteria.utils import init_coverage_tables, neuron_covered, update_coverage

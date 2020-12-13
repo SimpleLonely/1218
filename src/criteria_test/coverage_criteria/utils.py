@@ -65,14 +65,18 @@ def update_coverage(sess, x, input_data, model, model_layer_dict, feed_dict, thr
     for key in model.layer_names:
         if 'Flatten' not in key and 'Input' not in key and 'input' not in key:
             tensor = dict[key]
-            feed = {x: input_data}
+            graph_x = tf.get_default_graph().get_tensor_by_name('dense_70_input:0')
+            feed = {graph_x: input_data}
             if feed_dict is not None:
                 feed.update(feed_dict)
-            # TODO: Exception has occurred: InvalidArgumentError
+            # print(str(n) for n in tf.get_default_graph().get_operations())
+            
+            # Solved: Exception has occurred: InvalidArgumentError
             # You must feed a value for placeholder tensor 'dense_70_input' with dtype float and shape [?,13]
             # 	 [[node dense_70_input (defined at C:\Users\HLin Xu\AppData\Local\Programs\Python\Python37\lib\site-packages\tensorflow_core\python\framework\ops.py:1748) ]]
             # 但feed确实是float且[?,13]
             # 问题可能在于，model_load了keras的模型之后，和原本构造的x-y有关的graph不是同一个graph结构。需要获得新graph的input信息，喂对应的dict.
+
             layer_output = sess.run(tensor, feed_dict=feed)
 
             layer_op = np.zeros((layer_output.shape[0], layer_output.shape[-1]))
