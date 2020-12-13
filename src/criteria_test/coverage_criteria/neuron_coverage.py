@@ -39,6 +39,7 @@ def neuron_coverage(datasets, model_name, samples_path, de=False, attack='fgsm',
           
             samples_adv=np.asarray(image_list)
           
+
             samples = np.concatenate((samples, samples_adv))
             print("Combine data")
         else:
@@ -83,8 +84,8 @@ def main(argv=None):
                     samples_path=FLAGS.samples, epoch=9)
 
 if __name__ == '__main__':
-    flags.DEFINE_string('datasets', 'mnist', 'The target datasets.')
-    flags.DEFINE_string('model', 'lenet1', 'The name of model')
+    flags.DEFINE_string('datasets', 'gold', 'The target datasets.')
+    flags.DEFINE_string('model', 'GoldModel', 'The name of model')
     flags.DEFINE_string('samples', 'test', 'The path to load samples.')#'../mt_result/mnist_jsma/adv_jsma'
 
     tf.app.run()

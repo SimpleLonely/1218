@@ -169,8 +169,8 @@ class EnsembleModel(Model):
                     layer.name = name
                 self.layer_names.append(name)
 
-                # layer.set_input_shape(input_shape)
-                # input_shape = layer.get_output_shape()
+                # layer.input_shape = input_shape
+                input_shape = layer.get_output_shape_at(0)
             else:
                 last = 0
                 for j, l in enumerate(layer):
@@ -212,12 +212,6 @@ class EnsembleModel(Model):
         for layer in self.layers_list:
             if isinstance(layer, Layer):
                 x = layer.fprop(x)
-                assert x is not None
-                states.append(x)
-            elif isinstance(layer,keras.engine.Layer):
-                tf.reset_default_graph()
-                # TODO: Error: Tensor Tensor("dense_70/BiasAdd:0", shape=(?, 32), dtype=float32) is not an element of this graph.
-                x = K.function([x, K.learning_phase()], [layer.output])
                 assert x is not None
                 states.append(x)
             else:

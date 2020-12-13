@@ -106,8 +106,7 @@ def model_training(datasets, model_name, samples_path=None, nb_epochs=6, batch_s
     # Evaluate the accuracy of the model on legitimate test examples
     eval_params = {'batch_size': batch_size}
     if model_name == "GoldModel":
-        with tf.Session():
-            print(tf.sign(preds).eval())
+        print(tf.sign(preds).eval())
         accuracy = model_eval(sess, x, y, tf.sign(preds), X_test, np.sign(Y_test), args=eval_params, feed=feed_dict)
     else:
         accuracy = model_eval(sess, x, y, preds, X_test, Y_test, args=eval_params, feed=feed_dict)
@@ -205,8 +204,8 @@ def model_load(datasets, model_name, de=False, epoch=9, attack='fgsm', mu=False,
         preds = None
         feed_dict = None
         
-        x = tf.placeholder(tf.float32, shape=input_shape)
-        y = tf.placeholder(tf.float32, shape=(None, nb_classes))
+        x = tf.placeholder(tf.float64, shape=input_shape,name='x')
+        y = tf.placeholder(tf.float64, shape=(None, nb_classes))
 
         return sess, preds, x, y, model, feed_dict
     else:

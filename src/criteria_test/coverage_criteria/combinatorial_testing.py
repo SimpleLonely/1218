@@ -39,6 +39,8 @@ def ct(datasets, model_name, samples_path, t=2, p=0.5, de='False', attack='fgsm'
 
     tf.reset_default_graph()
     sess, preds, x, y, model, feed_dict = model_load(datasets=datasets, model_name=model_name, de=de, attack=attack,epoch=epoch)
+    global graph
+    graph = tf.get_default_graph() 
     layers_combination = neuron_combination(t, model, x)
     sess.close()
     del sess, preds, x, y, model, feed_dict
@@ -76,6 +78,7 @@ def ct(datasets, model_name, samples_path, t=2, p=0.5, de='False', attack='fgsm'
             if combination == np.ones(t_t).astype('int').tolist():
                 sparse += 1
 
+    assert total is not 0
     sparse_coverage = 1.0 * sparse / total
     dense_coverage = 1.0 * dense / (t_t * total)
     pt_completeness = 1.0 * p_completeness / total
